@@ -12,14 +12,15 @@ body {
 
 /* Contenedor principal */
 .container {
+  min-height: 100vh;
   width: 100%;
   padding: 20px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Esto hace que el contenedor ocupe el 100% de la pantalla */
+  height: auto; /* Esto hace que el contenedor ocupe el 100% de la pantalla */
   box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
-  overflow: hidden; /* Evita el desplazamiento horizontal */
+  overflow: auto; /* Evita el desplazamiento horizontal */
 }
 
 /* Tabla */
