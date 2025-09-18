@@ -18,7 +18,6 @@ body {
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: auto; /* Esto hace que el contenedor ocupe el 100% de la pantalla */
   box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
   overflow: auto; /* Evita el desplazamiento horizontal */
 }
