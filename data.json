@@ -1,0 +1,62 @@
+[
+  {
+    "name": "arroz",
+    "quantity": 2
+  },
+  {
+    "name": "tomate",
+    "quantity": 10
+  },
+  {
+    "name": "lechuga",
+    "quantity": 2
+  },
+  {
+    "name": "trapero",
+    "quantity": 1
+  },
+  {
+    "name": "aceitunas",
+    "quantity": 3
+  },
+  {
+    "name": "salchichas",
+    "quantity": 10
+  },
+  {
+    "name": "papas",
+    "quantity": 10
+  },
+  {
+    "name": "shampoo",
+    "quantity": 2
+  },
+  {
+    "name": "jabon",
+    "quantity": 2
+  },
+  {
+    "name": "aguacate",
+    "quantity": 5
+  },
+  {
+    "name": "mechero",
+    "quantity": 1
+  },
+  {
+    "name": "salsas",
+    "quantity": 3
+  },
+  {
+    "name": "kbab",
+    "quantity": 3
+  },
+  {
+    "name": "pollo",
+    "quantity": 2
+  },
+  {
+    "name": "alitas",
+    "quantity": 5
+  }
+]
