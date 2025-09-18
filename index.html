@@ -1,0 +1,52 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventario de Casa</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Inventario de Casa</h1>
+
+      <!-- Tabla de productos -->
+      <table id="product-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="product-list">
+          <!-- Aquí se insertan los productos dinámicamente -->
+        </tbody>
+      </table>
+
+      <!-- Formulario -->
+      <form id="add-product-form" class="form-container">
+        <h2>Agregar Producto</h2>
+        <input
+          type="text"
+          id="product-name"
+          placeholder="Nombre del producto"
+          required
+        />
+        <input
+          type="number"
+          id="product-quantity"
+          placeholder="Cantidad"
+          min="1"
+          required
+        />
+        <button type="submit">➕ Agregar</button>
+      </form>
+      <div class="floating-btn" id="addProductBtn">
+        <span>+</span>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

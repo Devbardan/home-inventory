@@ -1,0 +1,144 @@
+/* General */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  position: relative; /* Para asegurar que el contenido no se vea afectado por el botón flotante */
+}
+
+/* Contenedor principal */
+.container {
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Esto hace que el contenedor ocupe el 100% de la pantalla */
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+  overflow: hidden; /* Evita el desplazamiento horizontal */
+}
+
+/* Tabla */
+#product-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+thead {
+  background: #2c3e50;
+  color: #fff;
+}
+
+th,
+td {
+  padding: 10px 0px;
+  text-align: center;
+}
+
+tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+tbody tr:hover {
+  background: #f1f1f1;
+}
+
+/* Botones */
+button {
+  border: none;
+  padding: 8px 12px;
+  margin: 0 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #fff;
+  transition: 0.2s;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+button.consume {
+  border: 2px solid #e67e22; /* naranja */
+}
+
+button.add {
+  border: 2px solid #27ae60; /* verde */
+}
+
+button.delete {
+  border: 2px solid #c0392b; /* rojo */
+}
+
+/* Formulario */
+.form-container {
+  margin-top: 30px;
+  background: #eaf4ff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative; /* Hace que el formulario no se vea afectado por el botón flotante */
+}
+
+.form-container h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.form-container input {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 40%;
+}
+
+.form-container button {
+  background: #2980b9;
+  color: #fff;
+  margin-top: 10px;
+}
+
+/* Botón flotante */
+.floating-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #2980b9;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 30px;
+  transition: all 0.3s ease;
+  z-index: 1000; /* Asegura que el botón quede por encima del contenido */
+}
+
+.floating-btn:hover {
+  background-color: #1f68a4;
+}
+
+.floating-btn:hover span {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.floating-btn:focus {
+  outline: none;
+}
