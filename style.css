@@ -1,27 +1,3 @@
-/* General */
-body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f4f6f9;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  position: relative; /* Para asegurar que el contenido no se vea afectado por el botón flotante */
-}
-
-/* Contenedor principal */
-.container {
-  min-height: 100vh;
-  width: 100%;
-  padding: 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
-  overflow: auto; /* Evita el desplazamiento horizontal */
-}
-
 /* Tabla */
 #product-table {
   width: 100%;
