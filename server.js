@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Servir archivos estáticos desde la carpeta public
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, ".")));
 
 // Actualizar producto existente (consumir o reponer)
 app.put("/products/update", (req, res) => {
