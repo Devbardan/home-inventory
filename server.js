@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -34,6 +34,38 @@ app.put("/products/update", (req, res) => {
     } else {
       return res.status(404).send("Producto no encontrado");
     }
+
+    fs.writeFile("data.json", JSON.stringify(products, null, 2), (err) => {
+      if (err) return res.status(500).send("Error escribiendo data.json");
+      res.json(products[index]);
+    });
+  });
+});
+
+// Editar producto (nombre, cantidad, categoría)
+app.put("/products/update-edit", (req, res) => {
+  const { oldName, name, quantity, category } = req.body;
+
+  fs.readFile("data.json", "utf8", (err, data) => {
+    if (err) return res.status(500).send("Error leyendo data.json");
+
+    let products = [];
+    try {
+      products = JSON.parse(data);
+    } catch (e) {
+      products = [];
+    }
+
+    const index = products.findIndex(
+      (p) => p.name.toLowerCase() === oldName.toLowerCase()
+    );
+
+    if (index === -1) return res.status(404).send("Producto no encontrado");
+
+    products[index].name = name;
+    products[index].quantity = quantity;
+    products[index].category = category;
+    products[index].originalCategory = category;
 
     fs.writeFile("data.json", JSON.stringify(products, null, 2), (err) => {
       if (err) return res.status(500).send("Error escribiendo data.json");
