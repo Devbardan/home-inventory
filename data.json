@@ -1,62 +1,380 @@
 [
   {
-    "name": "arroz",
-    "quantity": 2
+    "name": "🍅 Tomate",
+    "quantity": 4,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "tomate",
-    "quantity": 10
+    "name": "🥔 Papas",
+    "quantity": 10,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "lechuga",
-    "quantity": 2
+    "name": "🥜 Cacahuetes",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
   },
   {
-    "name": "trapero",
-    "quantity": 1
+    "name": "🧴 Lejía",
+    "quantity": 1,
+    "category": "limpieza_hogar",
+    "originalCategory": "limpieza_hogar"
   },
   {
-    "name": "aceitunas",
-    "quantity": 3
+    "name": "🍋 Limón",
+    "quantity": 3,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "salchichas",
-    "quantity": 10
+    "name": "🎃 Calabacín",
+    "quantity": 2,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "papas",
-    "quantity": 10
+    "name": "🍊 Naranjas",
+    "quantity": 11,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "shampoo",
-    "quantity": 2
+    "name": "🧅 Cebolla",
+    "quantity": 4,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "jabon",
-    "quantity": 2
+    "name": "🧄 Ajo",
+    "quantity": 3,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "aguacate",
-    "quantity": 5
+    "name": "🥕 Zanahoria",
+    "quantity": 7,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "mechero",
-    "quantity": 1
+    "name": "🥑 Aguacate",
+    "quantity": 2,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "salsas",
-    "quantity": 3
+    "name": "🍇 Uvas",
+    "quantity": 1,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   },
   {
-    "name": "kbab",
-    "quantity": 3
+    "name": "🥓 Bacon",
+    "quantity": 2,
+    "category": "proteina",
+    "originalCategory": "proteina"
   },
   {
-    "name": "pollo",
-    "quantity": 2
+    "name": "🧀 Queso en lonchas",
+    "quantity": 2,
+    "category": "lacteos",
+    "originalCategory": "lacteos"
   },
   {
-    "name": "alitas",
-    "quantity": 5
+    "name": "🧀 Queso rayado",
+    "quantity": 2,
+    "category": "lacteos",
+    "originalCategory": "lacteos"
+  },
+  {
+    "name": "🥩 Fuet",
+    "quantity": 1,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🧈 Mantequilla",
+    "quantity": 1,
+    "category": "lacteos",
+    "originalCategory": "lacteos"
+  },
+  {
+    "name": "🥓 Lonchas de jamón",
+    "quantity": 1,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🍷 Tinto de verano",
+    "quantity": 2,
+    "category": "bebidas",
+    "originalCategory": "bebidas"
+  },
+  {
+    "name": "🍄 Champiñones",
+    "quantity": 1,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
+  },
+  {
+    "name": "🥛 Nata",
+    "quantity": 4,
+    "category": "lacteos",
+    "originalCategory": "lacteos"
+  },
+  {
+    "name": "🥣 Cereal",
+    "quantity": 3,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🍚 Arroz",
+    "quantity": 2,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🧂 Sal",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "☕️ Colacao",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "☕️ Café",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🍞 Pan",
+    "quantity": 1,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🧂 Pimienta",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🧄 Ajo en polvo",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🌿 Perejil",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🌿 Tomillo",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🌿 Orégano",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🌾 Avena",
+    "quantity": 1,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🌾 Harina",
+    "quantity": 1,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🐟 Atún",
+    "quantity": 6,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🍅 Tomate frito",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🍝 Pasta",
+    "quantity": 1,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🫒 Aceite de oliva",
+    "quantity": 5,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🪔 Aceite de girasol",
+    "quantity": 2,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🧼 Lavavajillas",
+    "quantity": 1,
+    "category": "limpieza_hogar",
+    "originalCategory": "limpieza_hogar"
+  },
+  {
+    "name": "💧 Agua",
+    "quantity": 72,
+    "category": "bebidas",
+    "originalCategory": "bebidas"
+  },
+  {
+    "name": "🥚 Huevos",
+    "quantity": 10,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🥩 Carne molida",
+    "quantity": 2,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🐟 Salmón",
+    "quantity": 1,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🐙 Aros de pulpo",
+    "quantity": 1,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🍗 Pollo",
+    "quantity": 5,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🥬 Espinacas",
+    "quantity": 1,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
+  },
+  {
+    "name": "🍓 Frutos rojos",
+    "quantity": 1,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
+  },
+  {
+    "name": "🍍 Frutos tropicales",
+    "quantity": 1,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
+  },
+  {
+    "name": "🍟 Papas fritas",
+    "quantity": 1,
+    "category": "despensa",
+    "originalCategory": "despensa"
+  },
+  {
+    "name": "🍢 Carne kebab",
+    "quantity": 1,
+    "category": "proteina",
+    "originalCategory": "proteina"
+  },
+  {
+    "name": "🧊 Hielo",
+    "quantity": 1,
+    "category": "bebidas",
+    "originalCategory": "bebidas"
+  },
+  {
+    "name": "🌾 Harina pan",
+    "quantity": 1,
+    "category": "panaderia-y-cereales",
+    "originalCategory": "panaderia-y-cereales"
+  },
+  {
+    "name": "🧴 Shampoo",
+    "quantity": 2,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🚿 Gel de ducha",
+    "quantity": 0,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🧻 Papel baño",
+    "quantity": 11,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🧼 Jabón en barra",
+    "quantity": 2,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🧴 Desodorante",
+    "quantity": 2,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🧼 Jabón íntimo",
+    "quantity": 2,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "💨 Ambientador",
+    "quantity": 1,
+    "category": "limpieza_hogar",
+    "originalCategory": "limpieza_hogar"
+  },
+  {
+    "name": "💆‍♂️ Acondicionador",
+    "quantity": 2,
+    "category": "aseo",
+    "originalCategory": "aseo"
+  },
+  {
+    "name": "🧽 Esponja",
+    "quantity": 2,
+    "category": "limpieza_hogar",
+    "originalCategory": "limpieza_hogar"
+  },
+  {
+    "name": "🥬 Lechuga",
+    "quantity": 0,
+    "category": "alimentos_frescos",
+    "originalCategory": "alimentos_frescos"
   }
 ]
