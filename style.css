@@ -1,120 +1,318 @@
+/* style.css actualizado */
+/* --- Base --- */
+:root {
+  --primary: #3498db;
+  --muted: #f0f0f0;
+  --danger: #e74c3c;
+  --accent: #2ecc71;
+  --font: "Arial", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font);
+  background: #f5f5f5;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* Título */
+h1 {
+  margin: 0 0 12px 0;
+  text-align: center;
+  font-size: 20px;
+}
+
+/* Filter area */
+.filter-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.filter-container label {
+  font-size: 14px;
+}
+.filter-container select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* Table container (scroll solo la tabla si hiciera falta) */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  /* evitar que la tabla rompa el layout */
+}
+
 /* Tabla */
-#product-table {
+table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* fuerza columnas a caber */
   background: #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
-thead {
-  background: #2c3e50;
-  color: #fff;
+thead th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #e8e8e8;
 }
 
-th,
-td {
-  padding: 10px 0px;
-  text-align: center;
+tbody td {
+  padding: 10px 12px;
+  font-size: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-tbody tr:nth-child(even) {
-  background: #f9f9f9;
+/* Column widths: funcionan tanto para 3 como para 4 columnas */
+#product-table th:nth-child(1),
+#product-table td:nth-child(1) {
+  width: 10%;
+} /* producto */
+#product-table th:nth-child(2),
+#product-table td:nth-child(2) {
+  width: 15%;
+} /* cantidad */
+#product-table th:nth-child(3),
+#product-table td:nth-child(3) {
+  width: 15%;
+} /* categoría o acciones (depende) */
+#product-table th:nth-child(4),
+#product-table td:nth-child(4) {
+  width: 15%;
+} /* acciones si existe 4ta */
+
+/* Resaltado de búsqueda */
+mark {
+  background: #ffe066;
+  padding: 0 2px;
 }
 
-tbody tr:hover {
-  background: #f1f1f1;
-}
-
-/* Botones */
+/* Botones (estilo consistente) */
 button {
   border: none;
-  padding: 8px 12px;
-  margin: 0 2px;
   border-radius: 6px;
+  padding: 6px 8px;
   cursor: pointer;
   font-size: 14px;
-  color: #fff;
-  transition: 0.2s;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-button:hover {
-  opacity: 0.85;
-}
-
+/* colores */
 button.consume {
-  border: 2px solid #e67e22; /* naranja */
+  background: #f39c12;
+  color: white;
 }
-
 button.add {
-  border: 2px solid #27ae60; /* verde */
+  background: var(--accent);
+  color: white;
 }
-
 button.delete {
-  border: 2px solid #c0392b; /* rojo */
+  background: var(--danger);
+  color: white;
+}
+button.edit {
+  background: var(--primary);
+  color: white;
+}
+button.confirm {
+  background: var(--accent);
+  color: white;
+}
+button.cancel {
+  background: var(--danger);
+  color: white;
 }
 
-/* Formulario */
-.form-container {
-  margin-top: 30px;
-  background: #eaf4ff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  position: relative; /* Hace que el formulario no se vea afectado por el botón flotante */
+/* Acciones container */
+.actions-container {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-.form-container h2 {
-  margin-bottom: 15px;
-  color: #2c3e50;
-}
-
-.form-container input {
-  padding: 10px;
-  margin: 5px;
-  border: 1px solid #ccc;
+/* Inputs/select en línea (edición) - compactos */
+.inline-input {
+  width: 100%;
+  max-width: 140px;
+  padding: 6px 8px;
+  font-size: 14px;
   border-radius: 6px;
-  width: 40%;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.inline-number {
+  max-width: 80px;
+  text-align: center;
+}
+.inline-select {
+  max-width: 60px;
+  padding: 6px 8px;
 }
 
+/* Formulario agregar */
+.form-container {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.form-container input,
+.form-container select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
 .form-container button {
-  background: #2980b9;
-  color: #fff;
-  margin-top: 10px;
+  background: var(--primary);
+  color: white;
+  padding: 10px 12px;
 }
 
-/* Botón flotante */
+/* Floating button */
 .floating-btn {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  right: 18px;
+  bottom: 18px;
   width: 50px;
   height: 50px;
-  background-color: #2980b9;
-  color: #fff;
   border-radius: 50%;
+  background: var(--primary);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Productos agotados */
+tbody tr[style*="e74c3c"] {
+  font-weight: 700;
+  color: white;
+}
+
+/* Mobile-specific behavior:
+   - .desktop-only visible on desktop, hidden on mobile
+   - .mobile-only hidden on desktop, visible on mobile
+   - .mobile-only .more-btn toggles .mobile-extra-buttons visibility (JS)
+*/
+.desktop-only {
+  display: inline-flex;
+}
+.mobile-only {
+  display: none;
+}
+.more-btn {
+  display: none;
+}
+
+/* mobile adjustments */
+@media (max-width: 600px) {
+  /* compact padding */
+  thead th,
+  tbody td {
+    padding: 8px;
+    font-size: 13px;
+  }
+  .inline-input {
+    max-width: 110px;
+    font-size: 13px;
+  }
+  .inline-number {
+    max-width: 70px;
+  }
+
+  /* hide desktop-only buttons */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* show mobile-only controls */
+  .mobile-only {
+    display: inline-flex !important;
+  }
+
+  /* show more button */
+  .more-btn {
+    display: inline-flex;
+    background: #34495e;
+    color: white;
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+
+  /* mobile extra (desplegado por JS) */
+  .mobile-extra-buttons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* keep actions compact and avoid breaking table width */
+  .actions-container {
+    gap: 4px;
+  }
+}
+/* Alerta superior */
+.alert-box {
+  display: none;
+  background: #e74c3c;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+/* Botón exportar (inferior izquierda) */
+.export-btn {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #2ecc71;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  font-size: 30px;
-  transition: all 0.3s ease;
-  z-index: 1000; /* Asegura que el botón quede por encima del contenido */
+  transition: background 0.2s ease;
 }
-
-.floating-btn:hover {
-  background-color: #1f68a4;
-}
-
-.floating-btn:hover span {
-  display: inline-block;
-  margin-left: 10px;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-.floating-btn:focus {
-  outline: none;
+.export-btn:hover {
+  background: #27ae60;
 }

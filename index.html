@@ -10,19 +10,39 @@
     <div class="container">
       <h1>Inventario de Casa</h1>
 
+      <!-- Filtro por categoría -->
+      <div class="filter-container">
+        <label for="category-filter">Filtrar por categoría:</label>
+        <select id="category-filter">
+          <option value="all">Todas</option>
+          <option value="alimentos_frescos">Alimentos Frescos</option>
+          <option value="panaderia-y-cereales">Panadería y Cereales</option>
+          <option value="despensa">Despensa</option>
+          <option value="lacteos">Lácteos</option>
+          <option value="proteina">Proteína</option>
+          <option value="aseo">Aseo Personal</option>
+          <option value="limpieza_hogar">Limpieza Hogar</option>
+          <option value="bebidas">Bebidas</option>
+          <option value="congelados">Congelados</option>
+          <option value="agotados">Agotados</option>
+        </select>
+      </div>
+
       <!-- Tabla de productos -->
-      <table id="product-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="product-list">
-          <!-- Aquí se insertan los productos dinámicamente -->
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table id="product-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="product-list">
+            <!-- Aquí se insertan los productos dinámicamente -->
+          </tbody>
+        </table>
+      </div>
 
       <!-- Formulario -->
       <form id="add-product-form" class="form-container">
@@ -40,10 +60,33 @@
           min="1"
           required
         />
+
+        <!-- Nuevo campo para la categoría -->
+        <select id="product-category" required>
+          <option value="">Selecciona una categoría</option>
+          <option value="alimentos_frescos">Alimentos Frescos</option>
+          <option value="panaderia-y-cereales">Panadería y Cereales</option>
+          <option value="despensa">Despensa</option>
+          <option value="lacteos">Lácteos</option>
+          <option value="proteina">Proteína</option>
+          <option value="aseo">Aseo Personal</option>
+          <option value="limpieza_hogar">Limpieza Hogar</option>
+          <option value="bebidas">Bebidas</option>
+          <option value="congelados">Congelados</option>
+        </select>
+
         <button type="submit">➕ Agregar</button>
       </form>
+
       <div class="floating-btn" id="addProductBtn">
         <span>+</span>
+      </div>
+      <!-- Alerta (oculta por defecto) -->
+      <div id="alert-box" class="alert-box"></div>
+
+      <!-- Botón exportar (abajo izquierda) -->
+      <div class="export-btn" id="exportAgotadosBtn">
+        <span>📤</span>
       </div>
     </div>
 
