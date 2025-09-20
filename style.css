@@ -95,7 +95,7 @@ tbody td {
 } /* producto */
 #product-table th:nth-child(2),
 #product-table td:nth-child(2) {
-  width: 15%;
+  width: 8%;
 } /* cantidad */
 #product-table th:nth-child(3),
 #product-table td:nth-child(3) {
