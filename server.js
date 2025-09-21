@@ -16,7 +16,7 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static("."));
 
 // ✅ Obtener todos los productos
 app.get("/api/products", async (req, res) => {
