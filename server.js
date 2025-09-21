@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,7 +17,6 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("."));
 
 // ✅ Obtener todos los productos
 app.get("/api/products", async (req, res) => {
@@ -70,6 +70,14 @@ app.delete("/api/products/:id", async (req, res) => {
     console.error("Error al eliminar producto:", err);
     res.status(500).json({ error: "Error al eliminar producto" });
   }
+});
+
+// ✅ Archivos estáticos (esto va al final para no tapar las rutas /api)
+app.use(express.static("."));
+
+// ✅ Ruta raíz para servir index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.listen(PORT, () => {
