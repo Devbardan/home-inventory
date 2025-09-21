@@ -39,14 +39,14 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // =============================================
-// CONEXIÓN A BASE DE DATOS
+// CONEXIÓN A BASE DE DATOS Y CREACIÓN DE TABLA
 // =============================================
 const connectToDB = async () => {
   try {
     const client = await pool.connect();
     console.log('✅ Conectado a PostgreSQL con éxito');
     
-    // Verificar si la tabla products existe
+    // Verificar si la tabla products existe y crearla si no existe
     try {
       const tableCheck = await client.query(`
         SELECT EXISTS (
@@ -58,11 +58,95 @@ const connectToDB = async () => {
       if (tableCheck.rows[0].exists) {
         console.log('✅ Tabla "products" encontrada en la base de datos');
       } else {
-        console.error('❌ ERROR: La tabla "products" no existe en la base de datos');
-        console.error('Debes crear la tabla manualmente o restaurar la funcionalidad de creación automática');
+        console.log('⚠️  Tabla "products" no encontrada. Creándola...');
+        
+        // Crear la tabla products con la estructura correcta
+        await client.query(`
+          CREATE TABLE products (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            quantity INTEGER NOT NULL,
+            category VARCHAR(100),
+            originalCategory VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        
+        console.log('✅ Tabla "products" creada exitosamente');
+        
+        // Insertar datos de ejemplo
+        await client.query(`
+          INSERT INTO products (name, quantity, category, originalCategory) VALUES
+          ('🍅 Tomate', 4, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥔 Papas', 10, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥜 Cacahuetes', 1, 'despensa', 'despensa'),
+          ('🧴 Lejía', 1, 'limpieza_hogar', 'limpieza_hogar'),
+          ('🍋 Limón', 3, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🎃 Calabacín', 2, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🍊 Naranjas', 11, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🧅 Cebolla', 4, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🧄 Ajo', 3, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥕 Zanahoria', 7, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥑 Aguacate', 2, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🍇 Uvas', 1, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥓 Bacon', 2, 'proteina', 'proteina'),
+          ('🧀 Queso en lonchas', 2, 'lacteos', 'lacteos'),
+          ('🧀 Queso rayado', 2, 'lacteos', 'lacteos'),
+          ('🥩 Fuet', 1, 'proteina', 'proteina'),
+          ('🧈 Mantequilla', 1, 'lacteos', 'lacteos'),
+          ('🥓 Lonchas de jamón', 1, 'proteina', 'proteina'),
+          ('🍷 Tinto de verano', 2, 'bebidas', 'bebidas'),
+          ('🍄 Champiñones', 1, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🥛 Nata', 4, 'lacteos', 'lacteos'),
+          ('🥣 Cereal', 3, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🍚 Arroz', 2, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🧂 Sal', 1, 'despensa', 'despensa'),
+          ('☕️ Colacao', 1, 'despensa', 'despensa'),
+          ('☕️ Café', 1, 'despensa', 'despensa'),
+          ('🍞 Pan', 1, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🧂 Pimienta', 1, 'despensa', 'despensa'),
+          ('🧄 Ajo en polvo', 1, 'despensa', 'despensa'),
+          ('🌿 Perejil', 1, 'despensa', 'despensa'),
+          ('🌿 Tomillo', 1, 'despensa', 'despensa'),
+          ('🌿 Orégano', 1, 'despensa', 'despensa'),
+          ('🌾 Avena', 1, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🌾 Harina', 1, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🐟 Atún', 6, 'proteina', 'proteina'),
+          ('🍅 Tomate frito', 1, 'despensa', 'despensa'),
+          ('🍝 Pasta', 1, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🫒 Aceite de oliva', 5, 'despensa', 'despensa'),
+          ('🪔 Aceite de girasol', 2, 'despensa', 'despensa'),
+          ('🧼 Lavavajillas', 1, 'limpieza_hogar', 'limpieza_hogar'),
+          ('💧 Agua', 72, 'bebidas', 'bebidas'),
+          ('🥚 Huevos', 10, 'proteina', 'proteina'),
+          ('🥩 Carne molida', 2, 'proteina', 'proteina'),
+          ('🐟 Salmón', 1, 'proteina', 'proteina'),
+          ('🐙 Aros de pulpo', 1, 'proteina', 'proteina'),
+          ('🍗 Pollo', 5, 'proteina', 'proteina'),
+          ('🥬 Espinacas', 1, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🍓 Frutos rojos', 1, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🍍 Frutos tropicales', 1, 'alimentos_frescos', 'alimentos_frescos'),
+          ('🍟 Papas fritas', 1, 'despensa', 'despensa'),
+          ('🍢 Carne kebab', 1, 'proteina', 'proteina'),
+          ('🧊 Hielo', 1, 'bebidas', 'bebidas'),
+          ('🌾 Harina pan', 1, 'panaderia-y-cereales', 'panaderia-y-cereales'),
+          ('🧴 Shampoo', 2, 'aseo', 'aseo'),
+          ('🚿 Gel de ducha', 0, 'aseo', 'aseo'),
+          ('🧻 Papel baño', 11, 'aseo', 'aseo'),
+          ('🧼 Jabón en barra', 2, 'aseo', 'aseo'),
+          ('🧴 Desodorante', 2, 'aseo', 'aseo'),
+          ('🧼 Jabón íntimo', 2, 'aseo', 'aseo'),
+          ('💨 Ambientador', 1, 'limpieza_hogar', 'limpieza_hogar'),
+          ('💆‍♂️ Acondicionador', 2, 'aseo', 'aseo'),
+          ('🧽 Esponja', 2, 'limpieza_hogar', 'limpieza_hogar'),
+          ('🥬 Lechuga', 0, 'alimentos_frescos', 'alimentos_frescos');
+        `);
+        
+        console.log('✅ Datos de ejemplo insertados correctamente');
       }
     } catch (tableError) {
-      console.error('❌ Error al verificar la tabla products:', tableError.message);
+      console.error('❌ Error al verificar/crear la tabla products:', tableError.message);
     }
     
     client.release();
@@ -279,11 +363,9 @@ app.listen(PORT, () => {
   console.log(`\n=== SERVIDOR INICIADO ===`);
   console.log(`🚀 Servidor ejecutándose en el puerto ${PORT}`);
   console.log(`🌍 Modo: ${isProduction ? 'production' : 'development'}`);
-  console.log(`📊 Endpoints principales:`);
-  console.log(`   - GET /products - Obtener todos los productos`);
-  console.log(`   - PUT /products/update - Actualizar cantidad`);
-  console.log(`   - PUT /products/update-edit - Editar producto`);
-  console.log(`   - POST /products - Agregar producto`);
-  console.log(`   - DELETE /products/:name - Eliminar producto`);
+  console.log(`📊 Endpoints disponibles:`);
+  console.log(`   - http://localhost:${PORT}/products`);
+  console.log(`   - http://localhost:${PORT}/products/update`);
+  console.log(`   - http://localhost:${PORT}/products/update-edit`);
   console.log(`=========================================`);
 });
