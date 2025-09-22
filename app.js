@@ -1,4 +1,4 @@
-/* app.js con soporte para decimales y step */
+/* app.js con soporte fraccionado, responsive móvil restaurado y formato de cantidades */
 
 let searchQuery = "";
 let sortConfig = { key: null, ascending: true };
@@ -50,6 +50,15 @@ async function updateProductEdit(product) {
 
 async function deleteProduct(id) {
   await fetch(`/api/products/${id}`, { method: "DELETE" });
+}
+
+// ===== Helpers =====
+function formatQuantity(product) {
+  if (!product) return "";
+  if (product.step && product.step < 1) {
+    return parseFloat(product.quantity).toFixed(2);
+  }
+  return parseInt(product.quantity, 10).toString();
 }
 
 // ===== Render =====
@@ -162,14 +171,13 @@ async function renderProducts() {
     }
 
     if (editingProduct === product.id) {
-      // Nombre
+      // Inputs de edición
       const nameTd = document.createElement("td");
       const nameInput = document.createElement("input");
       nameInput.type = "text";
       nameInput.value = product.name;
       nameTd.appendChild(nameInput);
 
-      // Cantidad
       const quantityTd = document.createElement("td");
       const quantityInput = document.createElement("input");
       quantityInput.type = "number";
@@ -177,14 +185,12 @@ async function renderProducts() {
       quantityInput.value = product.quantity;
       quantityTd.appendChild(quantityInput);
 
-      // Categoría
       const categoryTd = document.createElement("td");
       const categoryInput = document.createElement("input");
       categoryInput.type = "text";
       categoryInput.value = product.category;
       categoryTd.appendChild(categoryInput);
 
-      // Step
       const stepTd = document.createElement("td");
       const stepInput = document.createElement("input");
       stepInput.type = "number";
@@ -192,7 +198,6 @@ async function renderProducts() {
       stepInput.value = product.step || 1;
       stepTd.appendChild(stepInput);
 
-      // Acciones
       const actionsTd = document.createElement("td");
       const confirmBtn = document.createElement("button");
       confirmBtn.textContent = "✔️";
@@ -225,10 +230,15 @@ async function renderProducts() {
       tr.appendChild(actionsTd);
     } else {
       const nameTd = document.createElement("td");
-      nameTd.textContent = product.name;
+      if (searchQuery) {
+        const regex = new RegExp(`(${searchQuery})`, "gi");
+        nameTd.innerHTML = product.name.replace(regex, "<mark>$1</mark>");
+      } else {
+        nameTd.textContent = product.name;
+      }
 
       const quantityTd = document.createElement("td");
-      quantityTd.textContent = product.quantity;
+      quantityTd.textContent = formatQuantity(product);
 
       let categoryTd = null;
       if (editingProduct) {
@@ -236,32 +246,76 @@ async function renderProducts() {
         categoryTd.textContent = currentCategory.replace(/_/g, " ");
       }
 
+      // ===== Acciones con lógica responsive =====
       const actionsTd = document.createElement("td");
+      const container = document.createElement("div");
+      container.classList.add("actions-container");
+
+      // ➖ y ➕ siempre visibles
       const consumeBtn = document.createElement("button");
       consumeBtn.textContent = "➖";
+      consumeBtn.classList.add("consume");
       consumeBtn.onclick = () => consume(product);
 
       const addBtn = document.createElement("button");
       addBtn.textContent = "➕";
+      addBtn.classList.add("add");
       addBtn.onclick = () => add(product);
 
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "✏️";
-      editBtn.onclick = () => {
+      // Editar / eliminar desktop
+      const editBtnDesktop = document.createElement("button");
+      editBtnDesktop.textContent = "✏️";
+      editBtnDesktop.classList.add("edit", "desktop-only");
+      editBtnDesktop.onclick = () => {
         editingProduct = product.id;
         renderProducts();
       };
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "🗑️";
-      deleteBtn.onclick = () => {
+      const deleteBtnDesktop = document.createElement("button");
+      deleteBtnDesktop.textContent = "🗑️";
+      deleteBtnDesktop.classList.add("delete", "desktop-only");
+      deleteBtnDesktop.onclick = () => {
         deleteProduct(product.id).then(renderProducts);
       };
 
-      actionsTd.appendChild(consumeBtn);
-      actionsTd.appendChild(addBtn);
-      actionsTd.appendChild(editBtn);
-      actionsTd.appendChild(deleteBtn);
+      // Editar / eliminar móvil (en panel oculto)
+      const editBtnMobile = document.createElement("button");
+      editBtnMobile.textContent = "✏️";
+      editBtnMobile.classList.add("edit", "mobile-only");
+      editBtnMobile.onclick = () => {
+        editingProduct = product.id;
+        renderProducts();
+      };
+
+      const deleteBtnMobile = document.createElement("button");
+      deleteBtnMobile.textContent = "🗑️";
+      deleteBtnMobile.classList.add("delete", "mobile-only");
+      deleteBtnMobile.onclick = () => {
+        deleteProduct(product.id).then(renderProducts);
+      };
+
+      const mobileExtra = document.createElement("div");
+      mobileExtra.classList.add("mobile-extra-buttons");
+      mobileExtra.style.display = "none";
+      mobileExtra.appendChild(editBtnMobile);
+      mobileExtra.appendChild(deleteBtnMobile);
+
+      const moreBtn = document.createElement("button");
+      moreBtn.textContent = "...";
+      moreBtn.classList.add("more-btn", "mobile-only");
+      moreBtn.onclick = () => {
+        mobileExtra.style.display =
+          mobileExtra.style.display === "flex" ? "none" : "flex";
+      };
+
+      container.appendChild(consumeBtn);
+      container.appendChild(addBtn);
+      container.appendChild(editBtnDesktop);
+      container.appendChild(deleteBtnDesktop);
+      container.appendChild(moreBtn);
+      container.appendChild(mobileExtra);
+
+      actionsTd.appendChild(container);
 
       tr.appendChild(nameTd);
       tr.appendChild(quantityTd);
