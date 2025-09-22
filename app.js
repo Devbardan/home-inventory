@@ -370,21 +370,6 @@ async function add(product) {
   renderProducts();
 }
 
-function shareLowStockProducts() {
-    const lowStockProducts = products.filter(p => p.category === "Agotado");
-
-    if (!lowStockProducts.length) {
-        alert("No hay productos en categoría 'Agotado'.");
-        return;
-    }
-
-    const message = "📦 Productos Agotados:\n" +
-        lowStockProducts.map(p => `- ${p.name}`).join('\n');
-
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-}
-
 
 // ===== Formularios =====
 document
