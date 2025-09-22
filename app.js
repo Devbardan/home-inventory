@@ -408,4 +408,12 @@ document.getElementById("addProductBtn").addEventListener("click", () => {
   });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const exportBtn = document.getElementById('exportagoradosbtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', shareLowStockProducts);
+    }
+});
+
+
 renderProducts();
