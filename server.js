@@ -1,24 +1,25 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
-const path = require("path");
+// server.js con soporte para decimales y step
+import express from "express";
+import pkg from "pg";
+import dotenv from "dotenv";
+import cors from "cors";
+
+dotenv.config();
+const { Pool } = pkg;
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
+app.use(express.static("public"));
 
-// Configuración de la conexión a Postgres
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Render te da esta variable
-  ssl: {
-    rejectUnauthorized: false, // necesario para Render
-  },
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-app.use(cors());
-app.use(bodyParser.json());
+// ================== RUTAS ==================
 
-// ✅ Obtener todos los productos
+// Obtener todos los productos
 app.get("/api/products", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM productos ORDER BY id ASC");
@@ -29,29 +30,29 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// ✅ Crear un nuevo producto
+// Agregar producto
 app.post("/api/products", async (req, res) => {
-  const { name, quantity, category, original_category } = req.body;
   try {
+    let { name, quantity, category, step } = req.body;
+    if (!step) step = 1; // default 1 unidad
     const result = await pool.query(
-      "INSERT INTO productos (name, quantity, category, original_category) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, quantity, category, original_category]
+      "INSERT INTO productos (name, quantity, category, original_category, step) VALUES ($1, $2, $3, $3, $4) RETURNING *",
+      [name, quantity, category, step]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Error al crear producto:", err);
-    res.status(500).json({ error: "Error al crear producto" });
+    console.error("Error al agregar producto:", err);
+    res.status(500).json({ error: "Error al agregar producto" });
   }
 });
 
-// ✅ Actualizar un producto
-app.put("/api/products/:id", async (req, res) => {
-  const { id } = req.params;
-  const { name, quantity, category, original_category } = req.body;
+// Actualizar cantidad (+/- step)
+app.put("/api/products/update", async (req, res) => {
   try {
+    const { id, delta } = req.body;
     const result = await pool.query(
-      "UPDATE productos SET name=$1, quantity=$2, category=$3, original_category=$4 WHERE id=$5 RETURNING *",
-      [name, quantity, category, original_category, id]
+      "UPDATE productos SET quantity = GREATEST(quantity + $1, 0) WHERE id = $2 RETURNING *",
+      [delta, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -60,26 +61,50 @@ app.put("/api/products/:id", async (req, res) => {
   }
 });
 
-// ✅ Eliminar un producto
-app.delete("/api/products/:id", async (req, res) => {
-  const { id } = req.params;
+// Actualizar producto completo (edición)
+app.put("/api/products/update-edit", async (req, res) => {
   try {
+    const { id, name, quantity, category, step } = req.body;
+    const result = await pool.query(
+      "UPDATE productos SET name=$1, quantity=$2, category=$3, original_category=$3, step=$4 WHERE id=$5 RETURNING *",
+      [name, quantity, category, step || 1, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al editar producto:", err);
+    res.status(500).json({ error: "Error al editar producto" });
+  }
+});
+
+// Cambiar categoría (agotados, etc.)
+app.put("/api/products/update-category", async (req, res) => {
+  try {
+    const { id, newCategory } = req.body;
+    const result = await pool.query(
+      "UPDATE productos SET category=$1 WHERE id=$2 RETURNING *",
+      [newCategory, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al cambiar categoría:", err);
+    res.status(500).json({ error: "Error al cambiar categoría" });
+  }
+});
+
+// Eliminar producto
+app.delete("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
     await pool.query("DELETE FROM productos WHERE id=$1", [id]);
-    res.json({ message: "Producto eliminado" });
+    res.json({ success: true });
   } catch (err) {
     console.error("Error al eliminar producto:", err);
     res.status(500).json({ error: "Error al eliminar producto" });
   }
 });
 
-// ✅ Archivos estáticos (esto va al final para no tapar las rutas /api)
-app.use(express.static("."));
-
-// ✅ Ruta raíz para servir index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
+// ================== SERVIDOR ==================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
