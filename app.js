@@ -1,5 +1,7 @@
 /* app.js con soporte fraccionado, responsive móvil restaurado y formato de cantidades */
 
+// Cambios: el campo de categoría en edición ahora es un <select> clonado del HTML.
+
 let searchQuery = "";
 let sortConfig = { key: null, ascending: true };
 let editingProduct = null;
@@ -186,11 +188,21 @@ async function renderProducts() {
       quantityTd.appendChild(quantityInput);
 
       const categoryTd = document.createElement("td");
-      const categoryInput = documentcreateelement("input");
-categoryInput.type = "text";
-categoryInput.value = product.category;
-categoryTd.appendChild(categoryInput);
-      categoryTd.appendChild(categorySelect);
+      // CAMBIO: Usar el select original de categorías para edición
+      const categorySelectOriginal = document.getElementById("product-category");
+      let categorySelect;
+      if (categorySelectOriginal) {
+        categorySelect = categorySelectOriginal.cloneNode(true);
+        categorySelect.value = product.category;
+        categorySelect.removeAttribute("id"); // evitar duplicados
+        categoryTd.appendChild(categorySelect);
+      } else {
+        // fallback si no existe el select en el DOM
+        const fallbackInput = document.createElement("input");
+        fallbackInput.type = "text";
+        fallbackInput.value = product.category;
+        categoryTd.appendChild(fallbackInput);
+      }
 
       const stepTd = document.createElement("td");
       const stepInput = document.createElement("input");
@@ -207,7 +219,7 @@ categoryTd.appendChild(categoryInput);
           id: product.id,
           name: nameInput.value.trim(),
           quantity: parseFloat(quantityInput.value) || 0,
-          category: categoryInput.value.trim().toLowerCase(),
+          category: categorySelect ? categorySelect.value : fallbackInput.value.trim().toLowerCase(),
           step: parseFloat(stepInput.value) || 1,
         });
         editingProduct = null;
