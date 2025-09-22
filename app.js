@@ -186,25 +186,10 @@ async function renderProducts() {
       quantityTd.appendChild(quantityInput);
 
       const categoryTd = document.createElement("td");
-      const categorySelect = document.createElement("select");
-categorySelect.classList.add("inline-select");
-const categories = [
-        "Alimentos Frescos",
-        "Panaderia y Cereales",
-        "Despensa",
-        "Lacteos",
-        "Proteina",
-        "Aseo",
-        "Limpieza Hogar",
-        "Otros",
-      ];
-      categories.forEach((cat) => {
-        const option = document.createElement("option");
-        option.value = cat.toLowerCase().replace(/ /g, "_");
-        option.textContent = cat;
-        if (option.value === product.category) option.selected = true;
-        categorySelect.appendChild(option);
-      });
+      const categoryInput = documentcreateelement("input");
+categoryInput.type = "text";
+categoryInput.value = product.category;
+categoryTd.appendChild(categoryInput);
       categoryTd.appendChild(categorySelect);
 
       const stepTd = document.createElement("td");
