@@ -1,6 +1,9 @@
-/* app.js con soporte fraccionado, responsive móvil restaurado y formato de cantidades */
-
-// Cambios: el campo de categoría en edición ahora es un <select> clonado del HTML.
+/* app.js - Inventario con PostgreSQL
+   - soporte fracciones (step)
+   - responsive móvil con botón "..."
+   - formato cantidades (int o decimal)
+   - exportar productos agotados
+*/
 
 let searchQuery = "";
 let sortConfig = { key: null, ascending: true };
@@ -17,7 +20,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-// ===== API helpers =====
+// === API helpers ===
 async function fetchProducts() {
   const res = await fetch("/api/products");
   return res.json();
@@ -54,7 +57,7 @@ async function deleteProduct(id) {
   await fetch(`/api/products/${id}`, { method: "DELETE" });
 }
 
-// ===== Helpers =====
+// === Helpers ===
 function formatQuantity(product) {
   if (!product) return "";
   if (product.step && product.step < 1) {
@@ -63,7 +66,7 @@ function formatQuantity(product) {
   return parseInt(product.quantity, 10).toString();
 }
 
-// ===== Render =====
+// === Render ===
 function buildTableHeader() {
   const tableHeadRow = document.querySelector("#product-table thead tr");
   if (editingProduct) {
@@ -188,21 +191,23 @@ async function renderProducts() {
       quantityTd.appendChild(quantityInput);
 
       const categoryTd = document.createElement("td");
-      // CAMBIO: Usar el select original de categorías para edición
-      const categorySelectOriginal = document.getElementById("product-category");
-      let categorySelect;
-      if (categorySelectOriginal) {
-        categorySelect = categorySelectOriginal.cloneNode(true);
-        categorySelect.value = product.category;
-        categorySelect.removeAttribute("id"); // evitar duplicados
-        categoryTd.appendChild(categorySelect);
-      } else {
-        // fallback si no existe el select en el DOM
-        const fallbackInput = document.createElement("input");
-        fallbackInput.type = "text";
-        fallbackInput.value = product.category;
-        categoryTd.appendChild(fallbackInput);
-      }
+      const categorySelect = document.createElement("select");
+      [
+        "frutas",
+        "verduras",
+        "lacteos",
+        "carnes",
+        "cereales",
+        "otros",
+        "agotados",
+      ].forEach((cat) => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        if (product.category === cat) option.selected = true;
+        categorySelect.appendChild(option);
+      });
+      categoryTd.appendChild(categorySelect);
 
       const stepTd = document.createElement("td");
       const stepInput = document.createElement("input");
@@ -219,7 +224,7 @@ async function renderProducts() {
           id: product.id,
           name: nameInput.value.trim(),
           quantity: parseFloat(quantityInput.value) || 0,
-          category: categorySelect ? categorySelect.value : fallbackInput.value.trim().toLowerCase(),
+          category: categorySelect.value,
           step: parseFloat(stepInput.value) || 1,
         });
         editingProduct = null;
@@ -253,13 +258,6 @@ async function renderProducts() {
       const quantityTd = document.createElement("td");
       quantityTd.textContent = formatQuantity(product);
 
-      let categoryTd = null;
-      if (editingProduct) {
-        categoryTd = document.createElement("td");
-        categoryTd.textContent = currentCategory.replace(/_/g, " ");
-      }
-
-      // ===== Acciones con lógica responsive =====
       const actionsTd = document.createElement("td");
       const container = document.createElement("div");
       container.classList.add("actions-container");
@@ -267,18 +265,16 @@ async function renderProducts() {
       // ➖ y ➕ siempre visibles
       const consumeBtn = document.createElement("button");
       consumeBtn.textContent = "➖";
-      consumeBtn.classList.add("consume");
       consumeBtn.onclick = () => consume(product);
 
       const addBtn = document.createElement("button");
       addBtn.textContent = "➕";
-      addBtn.classList.add("add");
       addBtn.onclick = () => add(product);
 
-      // Editar / eliminar desktop
+      // Desktop-only
       const editBtnDesktop = document.createElement("button");
       editBtnDesktop.textContent = "✏️";
-      editBtnDesktop.classList.add("edit", "desktop-only");
+      editBtnDesktop.classList.add("desktop-only");
       editBtnDesktop.onclick = () => {
         editingProduct = product.id;
         renderProducts();
@@ -286,15 +282,15 @@ async function renderProducts() {
 
       const deleteBtnDesktop = document.createElement("button");
       deleteBtnDesktop.textContent = "🗑️";
-      deleteBtnDesktop.classList.add("delete", "desktop-only");
+      deleteBtnDesktop.classList.add("desktop-only");
       deleteBtnDesktop.onclick = () => {
         deleteProduct(product.id).then(renderProducts);
       };
 
-      // Editar / eliminar móvil (en panel oculto)
+      // Mobile-only
       const editBtnMobile = document.createElement("button");
       editBtnMobile.textContent = "✏️";
-      editBtnMobile.classList.add("edit", "mobile-only");
+      editBtnMobile.classList.add("mobile-only");
       editBtnMobile.onclick = () => {
         editingProduct = product.id;
         renderProducts();
@@ -302,7 +298,7 @@ async function renderProducts() {
 
       const deleteBtnMobile = document.createElement("button");
       deleteBtnMobile.textContent = "🗑️";
-      deleteBtnMobile.classList.add("delete", "mobile-only");
+      deleteBtnMobile.classList.add("mobile-only");
       deleteBtnMobile.onclick = () => {
         deleteProduct(product.id).then(renderProducts);
       };
@@ -332,7 +328,6 @@ async function renderProducts() {
 
       tr.appendChild(nameTd);
       tr.appendChild(quantityTd);
-      if (categoryTd) tr.appendChild(categoryTd);
       tr.appendChild(actionsTd);
     }
 
@@ -342,7 +337,7 @@ async function renderProducts() {
   updateHeaderIndicators();
 }
 
-// ===== Acciones =====
+// === Acciones ===
 async function consume(product) {
   const updated = await updateProduct(product.id, -product.step);
   if (updated && updated.quantity <= 0) {
@@ -370,8 +365,48 @@ async function add(product) {
   renderProducts();
 }
 
+// === Exportar agotados ===
+async function exportAgotados() {
+  const products = await fetchProducts();
 
-// ===== Formularios =====
+  const agotados = products.filter(
+    (p) =>
+      (typeof p.quantity === "number" && p.quantity <= 0) ||
+      (p.category && p.category.toLowerCase() === "agotados")
+  );
+
+  const alertBox = document.getElementById("alert-box");
+
+  if (agotados.length === 0) {
+    alertBox.textContent = "No hay productos agotados";
+    alertBox.style.display = "block";
+    setTimeout(() => {
+      alertBox.style.display = "none";
+    }, 3000);
+    return;
+  }
+
+  let message = "🛒 *Productos agotados:*\n\n";
+  agotados.forEach((p) => {
+    message += `- ${p.name}\n`;
+  });
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Productos agotados",
+        text: message,
+      });
+    } catch (err) {
+      console.log("Share cancelado o falló", err);
+    }
+  } else {
+    const url = "https://wa.me/?text=" + encodeURIComponent(message);
+    window.open(url, "_blank");
+  }
+}
+
+// === Formularios ===
 document
   .getElementById("add-product-form")
   .addEventListener("submit", async function (e) {
@@ -409,12 +444,8 @@ document.getElementById("addProductBtn").addEventListener("click", () => {
   });
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    const exportBtn = document.getElementById('exportagoradosbtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', shareLowStockProducts);
-    }
-});
-
+document
+  .getElementById("exportAgotadosBtn")
+  .addEventListener("click", exportAgotados);
 
 renderProducts();
