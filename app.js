@@ -1,9 +1,5 @@
-/* app.js - Inventario con PostgreSQL
-   - soporte fracciones (step)
-   - responsive móvil con botón "..."
-   - formato cantidades (int o decimal)
-   - exportar productos agotados
-   - edición de categorías corregida
+/* app.js - corrección: categorías canonicales (panaderia_cereales), edición select consistente,
+   normalización al guardar/editar y sin opciones "agotados"/"otros" en el select.
 */
 
 let searchQuery = "";
@@ -12,7 +8,6 @@ let editingProduct = null;
 
 const MOBILE_BREAKPOINT = 600;
 let wasMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-
 window.addEventListener("resize", () => {
   const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
   if (isMobile !== wasMobile) {
@@ -21,13 +16,69 @@ window.addEventListener("resize", () => {
   }
 });
 
-// === API helpers ===
+/* ----------------- Utilidades de categoría ----------------- */
+
+// Convierte acentos, limpia y devuelve una clave canonical,
+// con manejo especial para "Panadería y cereales" -> "panaderia_cereales".
+function canonicalizeCategory(raw) {
+  if (!raw && raw !== "") return "otros";
+  let v = String(raw).toLowerCase().trim();
+
+  // quitar acentos
+  v = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // normalizar separadores a espacios
+  v = v.replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+
+  // reglas explícitas (aseguran panaderia_cereales)
+  if (v.includes("panader") && v.includes("cereal")) return "panaderia_cereales";
+  if (v.includes("alimentos") && v.includes("fresco")) return "alimentos_frescos";
+  if (v.includes("despensa")) return "despensa";
+  if (v.includes("lacteo") || v.includes("lacteos")) return "lacteos";
+  if (v.includes("proteina") || v.includes("proteínas") || v.includes("proteinas")) return "proteina";
+  if (v.includes("aseo")) return "aseo";
+  if (v.includes("limpieza") && v.includes("hogar")) return "limpieza_hogar";
+  if (v.includes("bebida") || v.includes("bebidas")) return "bebidas";
+  if (v.includes("congel")) return "congelados";
+  if (v.includes("agotad")) return "agotados";
+
+  // fallback: reemplazar espacios por guion bajo y quitar caracteres raros
+  v = v.replace(/\s+/g, "_").replace(/[^\w_]/g, "");
+  return v || "otros";
+}
+
+// Lista de categorías válidas (las que deben aparecer en el select de edición y en el form)
+const CATEGORY_OPTIONS = [
+  { key: "alimentos_frescos", label: "Alimentos Frescos" },
+  { key: "panaderia_cereales", label: "Panadería y Cereales" },
+  { key: "despensa", label: "Despensa" },
+  { key: "lacteos", label: "Lácteos" },
+  { key: "proteina", label: "Proteína" },
+  { key: "aseo", label: "Aseo" },
+  { key: "limpieza_hogar", label: "Limpieza Hogar" },
+  { key: "bebidas", label: "Bebidas" },
+  { key: "congelados", label: "Congelados" },
+];
+
+// transforma clave canonical en etiqueta legible
+function categoryLabel(key) {
+  const found = CATEGORY_OPTIONS.find((c) => c.key === key);
+  return found ? found.label : (key || "").replace(/_/g, " ");
+}
+
+/* ----------------- API helpers ----------------- */
+
 async function fetchProducts() {
   const res = await fetch("/api/products");
-  return res.json();
+  return res.ok ? res.json() : [];
 }
 
 async function saveProduct(product) {
+  // normalizar categoría antes de enviar
+  product.category = canonicalizeCategory(product.category);
+  product.original_category = product.category;
+  if (!product.step && product.step !== 0) product.step = 1;
+
   const res = await fetch("/api/products", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -36,38 +87,54 @@ async function saveProduct(product) {
   return res.json();
 }
 
+// delta puede ser decimal (ej. -0.5)
 async function updateProduct(id, delta) {
   const res = await fetch("/api/products/update", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, delta }),
   });
-  return res.json();
+  return res.ok ? res.json() : null;
 }
 
 async function updateProductEdit(product) {
+  // aseguramos que la categoría enviada es canonical
+  product.category = canonicalizeCategory(product.category);
+  if (!product.step && product.step !== 0) product.step = 1;
+
   const res = await fetch("/api/products/update-edit", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(product),
   });
-  return res.json();
+  return res.ok ? res.json() : null;
+}
+
+async function updateProductCategory(id, newCategory) {
+  const res = await fetch("/api/products/update-category", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, newCategory: canonicalizeCategory(newCategory) }),
+  });
+  return res.ok ? res.json() : null;
 }
 
 async function deleteProduct(id) {
   await fetch(`/api/products/${id}`, { method: "DELETE" });
 }
 
-// === Helpers ===
+/* ----------------- UI helpers ----------------- */
+
 function formatQuantity(product) {
-  if (!product) return "";
-  if (product.step && product.step < 1) {
-    return parseFloat(product.quantity).toFixed(2);
-  }
-  return parseInt(product.quantity, 10).toString();
+  const q = Number(product.quantity || 0);
+  const step = Number(product.step || 1);
+  if (isNaN(q)) return "";
+  if (step === 1) return String(Math.floor(q)); // muestra entero si step === 1
+  return q.toFixed(2);
 }
 
-// === Render ===
+/* ----------------- Header / orden ----------------- */
+
 function buildTableHeader() {
   const tableHeadRow = document.querySelector("#product-table thead tr");
   if (editingProduct) {
@@ -93,8 +160,7 @@ function buildTableHeader() {
     nameTh.dataset.originalText =
       nameTh.dataset.originalText || nameTh.textContent;
     nameTh.onclick = () => {
-      if (sortConfig.key === "name")
-        sortConfig.ascending = !sortConfig.ascending;
+      if (sortConfig.key === "name") sortConfig.ascending = !sortConfig.ascending;
       else {
         sortConfig.key = "name";
         sortConfig.ascending = true;
@@ -106,8 +172,7 @@ function buildTableHeader() {
     qtyTh.dataset.originalText =
       qtyTh.dataset.originalText || qtyTh.textContent;
     qtyTh.onclick = () => {
-      if (sortConfig.key === "quantity")
-        sortConfig.ascending = !sortConfig.ascending;
+      if (sortConfig.key === "quantity") sortConfig.ascending = !sortConfig.ascending;
       else {
         sortConfig.key = "quantity";
         sortConfig.ascending = true;
@@ -118,41 +183,40 @@ function buildTableHeader() {
 }
 
 function updateHeaderIndicators() {
-  const nameTh = document.querySelector(
-    '#product-table thead th[data-key="name"]'
-  );
-  const qtyTh = document.querySelector(
-    '#product-table thead th[data-key="quantity"]'
-  );
-  if (nameTh)
-    nameTh.textContent = nameTh.dataset.originalText || nameTh.textContent;
-  if (qtyTh)
-    qtyTh.textContent = qtyTh.dataset.originalText || qtyTh.textContent;
+  const nameTh = document.querySelector('#product-table thead th[data-key="name"]');
+  const qtyTh = document.querySelector('#product-table thead th[data-key="quantity"]');
+  if (nameTh) nameTh.textContent = nameTh.dataset.originalText || nameTh.textContent;
+  if (qtyTh) qtyTh.textContent = qtyTh.dataset.originalText || qtyTh.textContent;
 
-  if (sortConfig.key && (nameTh || qtyTh)) {
+  if (sortConfig.key) {
     const th = sortConfig.key === "name" ? nameTh : qtyTh;
     if (th) th.textContent += sortConfig.ascending ? " ▲" : " ▼";
   }
 }
 
+/* ----------------- Render listado ----------------- */
+
 async function renderProducts() {
   const products = await fetchProducts();
   const list = document.getElementById("product-list");
-  const filter = document.getElementById("category-filter").value.toLowerCase();
+
+  // obtener filtro y canonicalizar si no es "all"
+  const rawFilter = (document.getElementById("category-filter").value || "all");
+  const filter = rawFilter === "all" ? "all" : canonicalizeCategory(rawFilter);
 
   list.innerHTML = "";
-
   buildTableHeader();
 
+  // ordenar
   if (sortConfig.key) {
     products.sort((a, b) => {
       let valA, valB;
       if (sortConfig.key === "name") {
         valA = (a.name || "").toLowerCase();
         valB = (b.name || "").toLowerCase();
-      } else if (sortConfig.key === "quantity") {
-        valA = a.quantity || 0;
-        valB = b.quantity || 0;
+      } else {
+        valA = Number(a.quantity || 0);
+        valB = Number(b.quantity || 0);
       }
       if (valA < valB) return sortConfig.ascending ? -1 : 1;
       if (valA > valB) return sortConfig.ascending ? 1 : -1;
@@ -160,15 +224,15 @@ async function renderProducts() {
     });
   }
 
-  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-
   products.forEach((product) => {
-    let currentCategory = product.category || "otros";
-    if (product.quantity <= 0) currentCategory = "agotados";
+    // currentCategory canonical: si quantity <=0 forzamos "agotados"
+    const quantityNum = Number(product.quantity || 0);
+    let currentCategory = canonicalizeCategory(product.category || product.original_category || "otros");
+    if (quantityNum <= 0) currentCategory = "agotados";
 
-    if (filter !== "all" && filter !== currentCategory.toLowerCase()) return;
-    if (searchQuery && !product.name.toLowerCase().includes(searchQuery))
-      return;
+    // aplicar filtro
+    if (filter !== "all" && filter !== currentCategory) return;
+    if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return;
 
     const tr = document.createElement("tr");
     if (currentCategory === "agotados") {
@@ -176,12 +240,12 @@ async function renderProducts() {
       tr.style.color = "white";
     }
 
+    // Modo edición (fila)
     if (editingProduct === product.id) {
-      // Inputs de edición
       const nameTd = document.createElement("td");
       const nameInput = document.createElement("input");
       nameInput.type = "text";
-      nameInput.value = product.name;
+      nameInput.value = product.name || "";
       nameTd.appendChild(nameInput);
 
       const quantityTd = document.createElement("td");
@@ -193,24 +257,14 @@ async function renderProducts() {
 
       const categoryTd = document.createElement("td");
       const categorySelect = document.createElement("select");
-
-      // ✅ categorías válidas para editar
-      const categories = [
-        { value: "frutas", label: "Frutas" },
-        { value: "verduras", label: "Verduras" },
-        { value: "lacteos", label: "Lácteos" },
-        { value: "carnes", label: "Carnes" },
-        { value: "panaderia_cereales", label: "Panadería y cereales" },
-      ];
-
-      categories.forEach((cat) => {
-        const option = document.createElement("option");
-        option.value = cat.value;
-        option.textContent = cat.label;
-        if (product.category === cat.value) option.selected = true;
-        categorySelect.appendChild(option);
+      // Usar exactamente las mismas categorías del formulario / filtro (sin "otros"/"agotados")
+      CATEGORY_OPTIONS.forEach(({ key, label }) => {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = label;
+        if (canonicalizeCategory(product.category) === key) opt.selected = true;
+        categorySelect.appendChild(opt);
       });
-
       categoryTd.appendChild(categorySelect);
 
       const stepTd = document.createElement("td");
@@ -228,7 +282,7 @@ async function renderProducts() {
           id: product.id,
           name: nameInput.value.trim(),
           quantity: parseFloat(quantityInput.value) || 0,
-          category: categorySelect.value,
+          category: categorySelect.value, // ya es canonical key
           step: parseFloat(stepInput.value) || 1,
         });
         editingProduct = null;
@@ -251,6 +305,7 @@ async function renderProducts() {
       tr.appendChild(stepTd);
       tr.appendChild(actionsTd);
     } else {
+      // Fila normal
       const nameTd = document.createElement("td");
       if (searchQuery) {
         const regex = new RegExp(`(${searchQuery})`, "gi");
@@ -262,10 +317,18 @@ async function renderProducts() {
       const quantityTd = document.createElement("td");
       quantityTd.textContent = formatQuantity(product);
 
+      // Mostrar categoría en texto solo si hay una edición global activa
+      let categoryTd = null;
+      if (editingProduct) {
+        categoryTd = document.createElement("td");
+        categoryTd.textContent = categoryLabel(currentCategory);
+      }
+
       const actionsTd = document.createElement("td");
       const container = document.createElement("div");
       container.classList.add("actions-container");
 
+      // botones visibles siempre
       const consumeBtn = document.createElement("button");
       consumeBtn.textContent = "➖";
       consumeBtn.onclick = () => consume(product);
@@ -274,6 +337,7 @@ async function renderProducts() {
       addBtn.textContent = "➕";
       addBtn.onclick = () => add(product);
 
+      // botones desktop
       const editBtnDesktop = document.createElement("button");
       editBtnDesktop.textContent = "✏️";
       editBtnDesktop.classList.add("desktop-only");
@@ -285,10 +349,9 @@ async function renderProducts() {
       const deleteBtnDesktop = document.createElement("button");
       deleteBtnDesktop.textContent = "🗑️";
       deleteBtnDesktop.classList.add("desktop-only");
-      deleteBtnDesktop.onclick = () => {
-        deleteProduct(product.id).then(renderProducts);
-      };
+      deleteBtnDesktop.onclick = () => deleteProduct(product.id).then(renderProducts);
 
+      // botones mobile ocultos en panel
       const editBtnMobile = document.createElement("button");
       editBtnMobile.textContent = "✏️";
       editBtnMobile.classList.add("mobile-only");
@@ -300,9 +363,7 @@ async function renderProducts() {
       const deleteBtnMobile = document.createElement("button");
       deleteBtnMobile.textContent = "🗑️";
       deleteBtnMobile.classList.add("mobile-only");
-      deleteBtnMobile.onclick = () => {
-        deleteProduct(product.id).then(renderProducts);
-      };
+      deleteBtnMobile.onclick = () => deleteProduct(product.id).then(renderProducts);
 
       const mobileExtra = document.createElement("div");
       mobileExtra.classList.add("mobile-extra-buttons");
@@ -329,6 +390,7 @@ async function renderProducts() {
 
       tr.appendChild(nameTd);
       tr.appendChild(quantityTd);
+      if (categoryTd) tr.appendChild(categoryTd);
       tr.appendChild(actionsTd);
     }
 
@@ -338,115 +400,92 @@ async function renderProducts() {
   updateHeaderIndicators();
 }
 
-// === Acciones ===
+/* ----------------- Acciones ----------------- */
+
 async function consume(product) {
-  const updated = await updateProduct(product.id, -product.step);
-  if (updated && updated.quantity <= 0) {
-    await fetch("/api/products/update-category", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: product.id, newCategory: "agotados" }),
-    });
+  const step = Number(product.step || 1);
+  const updated = await updateProduct(product.id, -step);
+  if (updated && Number(updated.quantity) <= 0) {
+    await updateProductCategory(product.id, "agotados");
   }
   renderProducts();
 }
 
 async function add(product) {
-  const updated = await updateProduct(product.id, product.step);
-  if (updated && updated.quantity > 0 && updated.category === "agotados") {
-    await fetch("/api/products/update-category", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: product.id,
-        newCategory: updated.original_category,
-      }),
-    });
+  const step = Number(product.step || 1);
+  const updated = await updateProduct(product.id, step);
+  if (updated && Number(updated.quantity) > 0 && updated.category === "agotados") {
+    // restaurar original_category si existe
+    await updateProductCategory(product.id, updated.original_category || "otros");
   }
   renderProducts();
 }
 
-// === Exportar agotados ===
+/* ----------------- Exportar agotados ----------------- */
+
 async function exportAgotados() {
   const products = await fetchProducts();
-
   const agotados = products.filter(
     (p) =>
-      (typeof p.quantity === "number" && p.quantity <= 0) ||
-      (p.category && p.category.toLowerCase() === "agotados")
+      (typeof p.quantity === "number" && Number(p.quantity) <= 0) ||
+      (p.category && canonicalizeCategory(p.category) === "agotados")
   );
 
   const alertBox = document.getElementById("alert-box");
-
-  if (agotados.length === 0) {
-    alertBox.textContent = "No hay productos agotados";
-    alertBox.style.display = "block";
-    setTimeout(() => {
-      alertBox.style.display = "none";
-    }, 3000);
+  if (!agotados || agotados.length === 0) {
+    if (alertBox) {
+      alertBox.textContent = "No hay productos agotados";
+      alertBox.style.display = "block";
+      setTimeout(() => (alertBox.style.display = "none"), 3000);
+    } else {
+      alert("No hay productos agotados");
+    }
     return;
   }
 
-  let message = "🛒 *Productos agotados:*\n\n";
-  agotados.forEach((p) => {
-    message += `- ${p.name}\n`;
-  });
+  let message = "🛒 Productos agotados:\n\n";
+  agotados.forEach((p) => (message += `- ${p.name}\n`));
 
   if (navigator.share) {
     try {
-      await navigator.share({
-        title: "Productos agotados",
-        text: message,
-      });
+      await navigator.share({ title: "Productos agotados", text: message });
     } catch (err) {
       console.log("Share cancelado o falló", err);
     }
   } else {
-    const url = "https://wa.me/?text=" + encodeURIComponent(message);
-    window.open(url, "_blank");
+    window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank");
   }
 }
 
-// === Formularios ===
-document
-  .getElementById("add-product-form")
-  .addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const name = document.getElementById("product-name").value.trim();
-    const quantity =
-      parseFloat(document.getElementById("product-quantity").value) || 0;
-    const category =
-      document.getElementById("product-category").value.trim().toLowerCase() ||
-      "otros";
-    const step =
-      parseFloat(document.getElementById("product-step")?.value) || 1;
+/* ----------------- Formularios / Listeners ----------------- */
 
-    await saveProduct({ name, quantity, category, step });
-    renderProducts();
-    this.reset();
-    searchQuery = "";
-  });
+document.getElementById("add-product-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const name = document.getElementById("product-name").value.trim();
+  const quantity = parseFloat(document.getElementById("product-quantity").value) || 0;
+  const rawCategory = document.getElementById("product-category").value || "";
+  const category = canonicalizeCategory(rawCategory);
+  const step = parseFloat(document.getElementById("product-step")?.value) || 1;
 
-document
-  .getElementById("product-name")
-  .addEventListener("input", (e) => {
-    searchQuery = e.target.value.toLowerCase();
-    renderProducts();
-  });
-
-document
-  .getElementById("category-filter")
-  .addEventListener("change", renderProducts);
-
-document.getElementById("addProductBtn").addEventListener("click", () => {
-  document.getElementById("add-product-form").scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
+  await saveProduct({ name, quantity, category, step });
+  renderProducts();
+  this.reset();
+  searchQuery = "";
 });
 
-document
-  .getElementById("exportAgotadosBtn")
-  .addEventListener("click", exportAgotados);
+document.getElementById("product-name").addEventListener("input", (e) => {
+  searchQuery = e.target.value.toLowerCase();
+  renderProducts();
+});
 
+document.getElementById("category-filter").addEventListener("change", renderProducts);
+
+document.getElementById("addProductBtn").addEventListener("click", () => {
+  document.getElementById("add-product-form").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+const exportBtn = document.getElementById("exportAgotadosBtn");
+if (exportBtn) exportBtn.addEventListener("click", exportAgotados);
+
+/* ----------------- Inicial ----------------- */
 renderProducts();
