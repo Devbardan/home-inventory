@@ -193,13 +193,15 @@ async function renderProducts() {
       const categoryTd = document.createElement("td");
       const categorySelect = document.createElement("select");
       [
-        "frutas",
-        "verduras",
-        "lacteos",
-        "carnes",
-        "cereales",
-        "otros",
-        "agotados",
+        "Alimentos frescos",
+        "Panaderia y cereales",
+        "Despensa",
+        "Lacteos",
+        "Proteina",
+        "Aseo personal",
+        "Limpieza hogar",
+        "Bebidas",
+        "Congelados",
       ].forEach((cat) => {
         const option = document.createElement("option");
         option.value = cat;
