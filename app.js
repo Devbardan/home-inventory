@@ -1,5 +1,7 @@
-/* app.js - corrección: categorías canonicales (panaderia_cereales), edición select consistente,
-   normalización al guardar/editar y sin opciones "agotados"/"otros" en el select.
+/* app.js - versión con:
+   - categorías canonicales
+   - edición con <select> consistente
+   - columna "Unidad mínima" añadida en edición
 */
 
 let searchQuery = "";
@@ -17,37 +19,25 @@ window.addEventListener("resize", () => {
 });
 
 /* ----------------- Utilidades de categoría ----------------- */
-
-// Convierte acentos, limpia y devuelve una clave canonical,
-// con manejo especial para "Panadería y cereales" -> "panaderia_cereales".
 function canonicalizeCategory(raw) {
   if (!raw && raw !== "") return "otros";
   let v = String(raw).toLowerCase().trim();
-
-  // quitar acentos
   v = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  // normalizar separadores a espacios
   v = v.replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
-
-  // reglas explícitas (aseguran panaderia_cereales)
   if (v.includes("panader") && v.includes("cereal")) return "panaderia_cereales";
   if (v.includes("alimentos") && v.includes("fresco")) return "alimentos_frescos";
   if (v.includes("despensa")) return "despensa";
-  if (v.includes("lacteo") || v.includes("lacteos")) return "lacteos";
-  if (v.includes("proteina") || v.includes("proteínas") || v.includes("proteinas")) return "proteina";
+  if (v.includes("lacteo")) return "lacteos";
+  if (v.includes("proteina") || v.includes("proteinas")) return "proteina";
   if (v.includes("aseo")) return "aseo";
   if (v.includes("limpieza") && v.includes("hogar")) return "limpieza_hogar";
-  if (v.includes("bebida") || v.includes("bebidas")) return "bebidas";
+  if (v.includes("bebida")) return "bebidas";
   if (v.includes("congel")) return "congelados";
   if (v.includes("agotad")) return "agotados";
-
-  // fallback: reemplazar espacios por guion bajo y quitar caracteres raros
   v = v.replace(/\s+/g, "_").replace(/[^\w_]/g, "");
   return v || "otros";
 }
 
-// Lista de categorías válidas (las que deben aparecer en el select de edición y en el form)
 const CATEGORY_OPTIONS = [
   { key: "alimentos_frescos", label: "Alimentos Frescos" },
   { key: "panaderia_cereales", label: "Panadería y Cereales" },
@@ -60,25 +50,20 @@ const CATEGORY_OPTIONS = [
   { key: "congelados", label: "Congelados" },
 ];
 
-// transforma clave canonical en etiqueta legible
 function categoryLabel(key) {
   const found = CATEGORY_OPTIONS.find((c) => c.key === key);
   return found ? found.label : (key || "").replace(/_/g, " ");
 }
 
 /* ----------------- API helpers ----------------- */
-
 async function fetchProducts() {
   const res = await fetch("/api/products");
   return res.ok ? res.json() : [];
 }
-
 async function saveProduct(product) {
-  // normalizar categoría antes de enviar
   product.category = canonicalizeCategory(product.category);
   product.original_category = product.category;
   if (!product.step && product.step !== 0) product.step = 1;
-
   const res = await fetch("/api/products", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -86,8 +71,6 @@ async function saveProduct(product) {
   });
   return res.json();
 }
-
-// delta puede ser decimal (ej. -0.5)
 async function updateProduct(id, delta) {
   const res = await fetch("/api/products/update", {
     method: "PUT",
@@ -96,12 +79,9 @@ async function updateProduct(id, delta) {
   });
   return res.ok ? res.json() : null;
 }
-
 async function updateProductEdit(product) {
-  // aseguramos que la categoría enviada es canonical
   product.category = canonicalizeCategory(product.category);
   if (!product.step && product.step !== 0) product.step = 1;
-
   const res = await fetch("/api/products/update-edit", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -109,7 +89,6 @@ async function updateProductEdit(product) {
   });
   return res.ok ? res.json() : null;
 }
-
 async function updateProductCategory(id, newCategory) {
   const res = await fetch("/api/products/update-category", {
     method: "PUT",
@@ -118,23 +97,20 @@ async function updateProductCategory(id, newCategory) {
   });
   return res.ok ? res.json() : null;
 }
-
 async function deleteProduct(id) {
   await fetch(`/api/products/${id}`, { method: "DELETE" });
 }
 
-/* ----------------- UI helpers ----------------- */
-
+/* ----------------- Helpers UI ----------------- */
 function formatQuantity(product) {
   const q = Number(product.quantity || 0);
   const step = Number(product.step || 1);
   if (isNaN(q)) return "";
-  if (step === 1) return String(Math.floor(q)); // muestra entero si step === 1
+  if (step === 1) return String(Math.floor(q));
   return q.toFixed(2);
 }
 
-/* ----------------- Header / orden ----------------- */
-
+/* ----------------- Header ----------------- */
 function buildTableHeader() {
   const tableHeadRow = document.querySelector("#product-table thead tr");
   if (editingProduct) {
@@ -152,62 +128,45 @@ function buildTableHeader() {
       <th>Acciones</th>
     `;
   }
-
   const nameTh = tableHeadRow.querySelector('th[data-key="name"]');
   const qtyTh = tableHeadRow.querySelector('th[data-key="quantity"]');
-
   if (nameTh) {
-    nameTh.dataset.originalText =
-      nameTh.dataset.originalText || nameTh.textContent;
+    nameTh.dataset.originalText = nameTh.dataset.originalText || nameTh.textContent;
     nameTh.onclick = () => {
       if (sortConfig.key === "name") sortConfig.ascending = !sortConfig.ascending;
-      else {
-        sortConfig.key = "name";
-        sortConfig.ascending = true;
-      }
+      else { sortConfig.key = "name"; sortConfig.ascending = true; }
       renderProducts();
     };
   }
   if (qtyTh) {
-    qtyTh.dataset.originalText =
-      qtyTh.dataset.originalText || qtyTh.textContent;
+    qtyTh.dataset.originalText = qtyTh.dataset.originalText || qtyTh.textContent;
     qtyTh.onclick = () => {
       if (sortConfig.key === "quantity") sortConfig.ascending = !sortConfig.ascending;
-      else {
-        sortConfig.key = "quantity";
-        sortConfig.ascending = true;
-      }
+      else { sortConfig.key = "quantity"; sortConfig.ascending = true; }
       renderProducts();
     };
   }
 }
-
 function updateHeaderIndicators() {
   const nameTh = document.querySelector('#product-table thead th[data-key="name"]');
   const qtyTh = document.querySelector('#product-table thead th[data-key="quantity"]');
   if (nameTh) nameTh.textContent = nameTh.dataset.originalText || nameTh.textContent;
   if (qtyTh) qtyTh.textContent = qtyTh.dataset.originalText || qtyTh.textContent;
-
   if (sortConfig.key) {
     const th = sortConfig.key === "name" ? nameTh : qtyTh;
     if (th) th.textContent += sortConfig.ascending ? " ▲" : " ▼";
   }
 }
 
-/* ----------------- Render listado ----------------- */
-
+/* ----------------- Render ----------------- */
 async function renderProducts() {
   const products = await fetchProducts();
   const list = document.getElementById("product-list");
-
-  // obtener filtro y canonicalizar si no es "all"
   const rawFilter = (document.getElementById("category-filter").value || "all");
   const filter = rawFilter === "all" ? "all" : canonicalizeCategory(rawFilter);
-
   list.innerHTML = "";
   buildTableHeader();
 
-  // ordenar
   if (sortConfig.key) {
     products.sort((a, b) => {
       let valA, valB;
@@ -225,12 +184,9 @@ async function renderProducts() {
   }
 
   products.forEach((product) => {
-    // currentCategory canonical: si quantity <=0 forzamos "agotados"
     const quantityNum = Number(product.quantity || 0);
     let currentCategory = canonicalizeCategory(product.category || product.original_category || "otros");
     if (quantityNum <= 0) currentCategory = "agotados";
-
-    // aplicar filtro
     if (filter !== "all" && filter !== currentCategory) return;
     if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return;
 
@@ -240,7 +196,6 @@ async function renderProducts() {
       tr.style.color = "white";
     }
 
-    // Modo edición (fila)
     if (editingProduct === product.id) {
       const nameTd = document.createElement("td");
       const nameInput = document.createElement("input");
@@ -257,7 +212,6 @@ async function renderProducts() {
 
       const categoryTd = document.createElement("td");
       const categorySelect = document.createElement("select");
-      // Usar exactamente las mismas categorías del formulario / filtro (sin "otros"/"agotados")
       CATEGORY_OPTIONS.forEach(({ key, label }) => {
         const opt = document.createElement("option");
         opt.value = key;
@@ -282,20 +236,15 @@ async function renderProducts() {
           id: product.id,
           name: nameInput.value.trim(),
           quantity: parseFloat(quantityInput.value) || 0,
-          category: categorySelect.value, // ya es canonical key
+          category: categorySelect.value,
           step: parseFloat(stepInput.value) || 1,
         });
         editingProduct = null;
         renderProducts();
       };
-
       const cancelBtn = document.createElement("button");
       cancelBtn.textContent = "❌";
-      cancelBtn.onclick = () => {
-        editingProduct = null;
-        renderProducts();
-      };
-
+      cancelBtn.onclick = () => { editingProduct = null; renderProducts(); };
       actionsTd.appendChild(confirmBtn);
       actionsTd.appendChild(cancelBtn);
 
@@ -305,7 +254,6 @@ async function renderProducts() {
       tr.appendChild(stepTd);
       tr.appendChild(actionsTd);
     } else {
-      // Fila normal
       const nameTd = document.createElement("td");
       if (searchQuery) {
         const regex = new RegExp(`(${searchQuery})`, "gi");
@@ -313,95 +261,74 @@ async function renderProducts() {
       } else {
         nameTd.textContent = product.name;
       }
-
       const quantityTd = document.createElement("td");
       quantityTd.textContent = formatQuantity(product);
 
-      // Mostrar categoría en texto solo si hay una edición global activa
-      let categoryTd = null;
+      let categoryTd = null, stepTd = null;
       if (editingProduct) {
         categoryTd = document.createElement("td");
         categoryTd.textContent = categoryLabel(currentCategory);
+        stepTd = document.createElement("td");
+        stepTd.textContent = product.step || 1;
       }
 
       const actionsTd = document.createElement("td");
       const container = document.createElement("div");
       container.classList.add("actions-container");
-
-      // botones visibles siempre
       const consumeBtn = document.createElement("button");
       consumeBtn.textContent = "➖";
       consumeBtn.onclick = () => consume(product);
-
       const addBtn = document.createElement("button");
       addBtn.textContent = "➕";
       addBtn.onclick = () => add(product);
-
-      // botones desktop
       const editBtnDesktop = document.createElement("button");
       editBtnDesktop.textContent = "✏️";
       editBtnDesktop.classList.add("desktop-only");
-      editBtnDesktop.onclick = () => {
-        editingProduct = product.id;
-        renderProducts();
-      };
-
+      editBtnDesktop.onclick = () => { editingProduct = product.id; renderProducts(); };
       const deleteBtnDesktop = document.createElement("button");
       deleteBtnDesktop.textContent = "🗑️";
       deleteBtnDesktop.classList.add("desktop-only");
       deleteBtnDesktop.onclick = () => deleteProduct(product.id).then(renderProducts);
-
-      // botones mobile ocultos en panel
       const editBtnMobile = document.createElement("button");
       editBtnMobile.textContent = "✏️";
       editBtnMobile.classList.add("mobile-only");
-      editBtnMobile.onclick = () => {
-        editingProduct = product.id;
-        renderProducts();
-      };
-
+      editBtnMobile.onclick = () => { editingProduct = product.id; renderProducts(); };
       const deleteBtnMobile = document.createElement("button");
       deleteBtnMobile.textContent = "🗑️";
       deleteBtnMobile.classList.add("mobile-only");
       deleteBtnMobile.onclick = () => deleteProduct(product.id).then(renderProducts);
-
       const mobileExtra = document.createElement("div");
       mobileExtra.classList.add("mobile-extra-buttons");
       mobileExtra.style.display = "none";
       mobileExtra.appendChild(editBtnMobile);
       mobileExtra.appendChild(deleteBtnMobile);
-
       const moreBtn = document.createElement("button");
       moreBtn.textContent = "...";
       moreBtn.classList.add("more-btn", "mobile-only");
       moreBtn.onclick = () => {
-        mobileExtra.style.display =
-          mobileExtra.style.display === "flex" ? "none" : "flex";
+        mobileExtra.style.display = mobileExtra.style.display === "flex" ? "none" : "flex";
       };
-
       container.appendChild(consumeBtn);
       container.appendChild(addBtn);
       container.appendChild(editBtnDesktop);
       container.appendChild(deleteBtnDesktop);
       container.appendChild(moreBtn);
       container.appendChild(mobileExtra);
-
       actionsTd.appendChild(container);
 
       tr.appendChild(nameTd);
       tr.appendChild(quantityTd);
       if (categoryTd) tr.appendChild(categoryTd);
+      if (stepTd) tr.appendChild(stepTd);
       tr.appendChild(actionsTd);
     }
 
     list.appendChild(tr);
   });
-
   updateHeaderIndicators();
 }
 
 /* ----------------- Acciones ----------------- */
-
 async function consume(product) {
   const step = Number(product.step || 1);
   const updated = await updateProduct(product.id, -step);
@@ -410,55 +337,42 @@ async function consume(product) {
   }
   renderProducts();
 }
-
 async function add(product) {
   const step = Number(product.step || 1);
   const updated = await updateProduct(product.id, step);
   if (updated && Number(updated.quantity) > 0 && updated.category === "agotados") {
-    // restaurar original_category si existe
     await updateProductCategory(product.id, updated.original_category || "otros");
   }
   renderProducts();
 }
 
 /* ----------------- Exportar agotados ----------------- */
-
 async function exportAgotados() {
   const products = await fetchProducts();
   const agotados = products.filter(
-    (p) =>
-      (typeof p.quantity === "number" && Number(p.quantity) <= 0) ||
-      (p.category && canonicalizeCategory(p.category) === "agotados")
+    (p) => (typeof p.quantity === "number" && Number(p.quantity) <= 0) ||
+           (p.category && canonicalizeCategory(p.category) === "agotados")
   );
-
   const alertBox = document.getElementById("alert-box");
   if (!agotados || agotados.length === 0) {
     if (alertBox) {
       alertBox.textContent = "No hay productos agotados";
       alertBox.style.display = "block";
       setTimeout(() => (alertBox.style.display = "none"), 3000);
-    } else {
-      alert("No hay productos agotados");
-    }
+    } else { alert("No hay productos agotados"); }
     return;
   }
-
   let message = "🛒 Productos agotados:\n\n";
   agotados.forEach((p) => (message += `- ${p.name}\n`));
-
   if (navigator.share) {
-    try {
-      await navigator.share({ title: "Productos agotados", text: message });
-    } catch (err) {
-      console.log("Share cancelado o falló", err);
-    }
+    try { await navigator.share({ title: "Productos agotados", text: message }); }
+    catch (err) { console.log("Share cancelado o falló", err); }
   } else {
     window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank");
   }
 }
 
-/* ----------------- Formularios / Listeners ----------------- */
-
+/* ----------------- Formularios ----------------- */
 document.getElementById("add-product-form").addEventListener("submit", async function (e) {
   e.preventDefault();
   const name = document.getElementById("product-name").value.trim();
@@ -466,24 +380,19 @@ document.getElementById("add-product-form").addEventListener("submit", async fun
   const rawCategory = document.getElementById("product-category").value || "";
   const category = canonicalizeCategory(rawCategory);
   const step = parseFloat(document.getElementById("product-step")?.value) || 1;
-
   await saveProduct({ name, quantity, category, step });
   renderProducts();
   this.reset();
   searchQuery = "";
 });
-
 document.getElementById("product-name").addEventListener("input", (e) => {
   searchQuery = e.target.value.toLowerCase();
   renderProducts();
 });
-
 document.getElementById("category-filter").addEventListener("change", renderProducts);
-
 document.getElementById("addProductBtn").addEventListener("click", () => {
   document.getElementById("add-product-form").scrollIntoView({ behavior: "smooth", block: "start" });
 });
-
 const exportBtn = document.getElementById("exportAgotadosBtn");
 if (exportBtn) exportBtn.addEventListener("click", exportAgotados);
 
